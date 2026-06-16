@@ -156,8 +156,8 @@ def build_rapidyaml(env, variant_dir):
     elif platform == 'web':
         # emcmake wraps cmake to inject the Emscripten toolchain
         cmake_command.insert(0, 'emcmake')
-        cmake_command.append('-DCMAKE_CXX_FLAGS=-fwasm-exceptions')
-        cmake_command.append('-DCMAKE_C_FLAGS=-fwasm-exceptions')
+        cmake_command.append('-DCMAKE_CXX_FLAGS=-fwasm-exceptions -matomics -mbulk-memory')
+        cmake_command.append('-DCMAKE_C_FLAGS=-fwasm-exceptions -matomics -mbulk-memory')
 
     # Android NDK configuration
     elif platform == 'android':
