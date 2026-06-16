@@ -68,6 +68,8 @@ def setup_build_env(base_env):
     # ========== UNIX-LIKE ==========
     else:
         if platform == 'web':
+            # godot-cpp adds -fno-exceptions for web; remove it so wasm exceptions work
+            env['CCFLAGS'] = [f for f in env.get('CCFLAGS', []) if f != '-fno-exceptions']
             env.Append(CCFLAGS=['-fwasm-exceptions'])
             env.Append(LINKFLAGS=['-fwasm-exceptions'])
         else:
