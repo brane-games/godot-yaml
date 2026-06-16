@@ -1,0 +1,69 @@
+name: 🌐 Build Web
+on:
+  workflow_dispatch:
+
+env:
+  BIN_PATH: project/addons/yaml/bin
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: 🌐 Web Debug (wasm32)
+            target: template_debug
+
+          - name: 🌐 Web Release (wasm32)
+            target: template_release
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Set up SCons
+        run: |
+          python -m pip install --upgrade pip
+          pip install scons
+
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.39
+          actions-cache-folder: 'emsdk-cache'
+
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: '3.30.4'
+
+      - name: Cache SCons build
+        uses: actions/cache@v5
+        with:
+          path: |
+            build/scons_cache
+            .scons_cache
+          key: ubuntu-22.04-web-${{ matrix.target }}-wasm32-${{ hashFiles('**/*.cpp', '**/*.hpp') }}
+          restore-keys: |
+            ubuntu-22.04-web-${{ matrix.target }}-wasm32-
+            ubuntu-22.04-web-
+
+      - name: Compile GDExtension
+        run: |
+          scons platform=web target=${{ matrix.target }} arch=wasm32 -j$(nproc)
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: gdyaml-web-${{ matrix.target }}-wasm32
+          path: ${{ env.BIN_PATH }}/*.wasm
+          retention-days: 7
